@@ -11,6 +11,7 @@ import { AvailabilityBlocksModule } from './availability-blocks/availability-blo
 import { BookingsModule } from './bookings/bookings.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { SearchModule } from './search/search.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
@@ -30,6 +31,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     BookingsModule,
     MessagingModule,
     ReviewsModule,
+    SearchModule,
   ],
   providers: [
     {
