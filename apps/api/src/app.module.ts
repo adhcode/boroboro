@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { ListingsModule } from './listings/listings.module';
 import { AvailabilityBlocksModule } from './availability-blocks/availability-blocks.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { MessagingModule } from './messaging/messaging.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
@@ -26,6 +27,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     ListingsModule,
     AvailabilityBlocksModule,
     BookingsModule,
+    MessagingModule,
   ],
   providers: [
     {
