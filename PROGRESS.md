@@ -31,20 +31,24 @@
 - Cancel and complete actions
 - **Tests**: 22/22 unit tests passing
 
+### 5. Messaging
+- Booking-scoped conversations
+- Renter ↔ Owner communication
+- Message history with pagination
+- Unread count tracking
+- Conversations list view
+- **Tests**: 11/11 unit tests passing
+
 ## 🔜 Next Modules
 
-### 5. Payments (Paystack Integration)
+### 6. Reviews
+- Post-booking reviews
+- Rating system (1-5)
+
+### 7. Payments (Paystack Integration)
 - Webhook handling
 - Escrow hold and release
 - Payment status tracking
-
-### 6. Messaging
-- Booking-scoped chat
-- Real-time updates
-
-### 7. Reviews
-- Post-booking reviews
-- Rating system (1-5)
 
 ### 8. Search
 - Advanced search with filters
@@ -57,12 +61,13 @@
 **Listings**: 7 endpoints
 **Availability**: 6 endpoints
 **Bookings**: 8 endpoints
+**Messaging**: 4 endpoints
 
-**Total**: 26 endpoints implemented
+**Total**: 30 endpoints implemented
 
 ## Test Coverage
 
-- Total unit tests: 62 passing
+- Total unit tests: 73 passing
 - E2E test suites: 3 modules
 - All critical paths covered
 
