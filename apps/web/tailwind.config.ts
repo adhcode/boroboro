@@ -10,16 +10,16 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          50: '#fff5f5',
-          100: '#ffe3e3',
-          200: '#ffc9c9',
-          300: '#ffa8a8',
-          400: '#ff8787',
-          500: '#ff6b6b',
-          600: '#fa5252',
-          700: '#f03e3e',
-          800: '#e03131',
-          900: '#c92a2a',
+          50: '#f0f4f8',
+          100: '#d9e2ec',
+          200: '#bcccdc',
+          300: '#9fb3c8',
+          400: '#829ab1',
+          500: '#627d98',
+          600: '#486581',
+          700: '#334e68',
+          800: '#243b53',
+          900: '#102a43',
         },
         neutral: {
           50: '#f8f9fa',
@@ -47,7 +47,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Valley Sans', 'system-ui', 'sans-serif'],
+        valley: ['Valley Sans', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'card': '0 1px 3px rgba(0, 0, 0, 0.08)',

@@ -12,7 +12,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-white rounded-xl overflow-hidden',
+          'bg-white rounded-[6px] overflow-hidden',
           {
             'cursor-pointer active:scale-[0.98] transition-transform': hover,
           },
