@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Share2, Heart, Star } from 'lucide-react';
 
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
@@ -46,7 +47,7 @@ export default function ListingDetailPage() {
   const listing = mockListing;
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-white pb-56">
       {/* Hero Image with overlay buttons */}
       <div className="relative h-[300px] w-full">
         <Image
@@ -207,7 +208,7 @@ export default function ListingDetailPage() {
       </div>
 
       {/* Fixed Bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 safe-area-bottom">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-neutral-200 p-4 space-y-2 safe-area-bottom">
         <Button
           variant="primary"
           fullWidth
@@ -216,7 +217,18 @@ export default function ListingDetailPage() {
         >
           Request to Book
         </Button>
+        <Button
+          variant="outline"
+          fullWidth
+          size="lg"
+          onClick={() => router.push('/chats/1')}
+        >
+          Send Message
+        </Button>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

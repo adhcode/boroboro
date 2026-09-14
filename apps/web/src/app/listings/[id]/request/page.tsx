@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Calendar, ShieldCheck } from 'lucide-react';
 
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
@@ -44,12 +45,12 @@ export default function BookingRequestPage() {
   };
 
   const handleSendMessage = () => {
-    // TODO: Navigate to messaging with owner
-    console.log('Opening message...');
+    // TODO: Navigate to messaging with owner - using conversation ID based on listing owner
+    router.push('/chats/1');
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24">
+    <div className="min-h-screen bg-neutral-50 pb-56">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -183,7 +184,7 @@ export default function BookingRequestPage() {
       </div>
 
       {/* Fixed Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 space-y-2 safe-area-bottom">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-neutral-200 p-4 space-y-2 safe-area-bottom">
         <Button
           variant="primary"
           fullWidth
@@ -201,6 +202,9 @@ export default function BookingRequestPage() {
           Send Message
         </Button>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

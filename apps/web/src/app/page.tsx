@@ -81,7 +81,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-white pb-32">
       <Header />
       <SearchBar />
       <CategoryTabs onCategoryChange={handleCategoryChange} />
