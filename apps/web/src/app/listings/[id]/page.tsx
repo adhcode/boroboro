@@ -208,7 +208,12 @@ export default function ListingDetailPage() {
 
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 safe-area-bottom">
-        <Button variant="primary" fullWidth size="lg">
+        <Button
+          variant="primary"
+          fullWidth
+          size="lg"
+          onClick={() => router.push(`/listings/${listing.id}/request`)}
+        >
           Request to Book
         </Button>
       </div>
