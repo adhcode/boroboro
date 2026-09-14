@@ -12,9 +12,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-white rounded-2xl overflow-hidden',
+          'bg-white rounded-xl overflow-hidden',
           {
-            'cursor-pointer': hover,
+            'cursor-pointer active:scale-[0.98] transition-transform': hover,
           },
           className
         )}
@@ -33,7 +33,7 @@ const CardImage = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         ref={ref}
-        className={cn('aspect-[4/3] w-full overflow-hidden bg-neutral-100', className)}
+        className={cn('relative w-full overflow-hidden bg-neutral-100', className)}
         {...props}
       >
         {children}
