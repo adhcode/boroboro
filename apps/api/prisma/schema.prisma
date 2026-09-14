@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  PENDING
+  HELD
+  RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  ARCHIVED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(USER)
+  
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  listings      Listing[]
+  bookingsAsRenter Booking[] @relation("RenterBookings")
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  givenReviews  Review[]  @relation("GivenReviews")
+  receivedReviews Review[] @relation("ReceivedReviews")
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model Listing {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  category      String
+  pricePerDay   Float
+  depositAmount Float
+  status        ListingStatus @default(DRAFT)
+  
+  images        String[]
+  location      String
+  latitude      Float?
+  longitude     Float?
+
+  ownerId       String
+  owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  availabilityBlocks AvailabilityBlock[]
+  bookings      Booking[]
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([status])
+  @@map("listings")
+}
+
+model AvailabilityBlock {
+  id         String   @id @default(cuid())
+  listingId  String
+  startDate  DateTime
+  endDate    DateTime
+  isBlocked  Boolean  @default(false) // true = unavailable, false = available
+  
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+
+  @@index([listingId])
+  @@index([startDate, endDate])
+  @@map("availability_blocks")
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  listingId     String
+  renterId      String
+  
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Float
+  depositAmount Float
+  
+  status        BookingStatus @default(PENDING)
+  
+  listing       Listing       @relation(fields: [listingId], references: [id])
+  renter        User          @relation("RenterBookings", fields: [renterId], references: [id])
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  messages      Message[]
+  payment       Payment?
+  review        Review?
+
+  @@index([listingId])
+  @@index([renterId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("bookings")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String        @unique
+  
+  paystackReference String        @unique
+  status            PaymentStatus @default(PENDING)
+  
+  amount            Float
+  depositAmount     Float
+  
+  heldAt            DateTime?
+  releasedAt        DateTime?
+  refundedAt        DateTime?
+  
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([paystackReference])
+  @@index([status])
+  @@map("payments")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  bookingId  String
+  senderId   String
+  receiverId String
+  content    String
+  
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("messages")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  reviewerId String
+  revieweeId String
+  
+  rating     Int      // 1-5
+  comment    String?
+  
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation("GivenReviews", fields: [reviewerId], references: [id])
+  reviewee   User     @relation("ReceivedReviews", fields: [revieweeId], references: [id])
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@map("reviews")
+}
+
+model SearchQuery {
+  id         String   @id @default(cuid())
+  query      String
+  category   String?
+  location   String?
+  resultCount Int
+  
+  createdAt  DateTime @default(now())
+
+  @@index([category])
+  @@index([location])
+  @@index([resultCount])
+  @@index([createdAt])
+  @@map("search_queries")
+}

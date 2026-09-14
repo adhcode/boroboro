@@ -1,0 +1,7 @@
+export const JWT_ACCESS_TOKEN_EXPIRY = '15m';
+export const JWT_REFRESH_TOKEN_EXPIRY = '7d';
+
+export const BOOKING_DISPUTE_WINDOW_DAYS = 3;
+
+export const PAGINATION_DEFAULT_LIMIT = 20;
+export const PAGINATION_MAX_LIMIT = 100;
