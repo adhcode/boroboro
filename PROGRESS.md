@@ -47,18 +47,28 @@
 - Auto-determine reviewer/reviewee based on booking
 - **Tests**: 18/18 unit tests passing
 
+### 7. Search
+- Advanced search with filters (query, category, location, price range, date range)
+- Pagination and sorting (by createdAt or pricePerDay)
+- Demand logging for low-result searches (< 3 results)
+- Popular searches endpoint
+- Demand insights endpoint (unfulfilled searches by category/location)
+- Only shows published listings
+- **Tests**: 13/13 unit tests passing
+
 ## 🔜 Next Modules
 
-### 7. Payments (Paystack Integration)
+### 8. Payments (Paystack Integration)
 - Deposit + booking fee escrow
 - Webhook handling
 - Payment status tracking
 - Release after confirmed return
 
-### 8. Search
-- Advanced search with filters
-- Category/location/price filtering
-- Demand logging (search_queries table)
+### 8. Payments (Paystack Integration)
+- Deposit + booking fee escrow
+- Webhook handling
+- Payment status tracking
+- Release after confirmed return
 
 ## API Endpoints Summary
 
@@ -69,12 +79,13 @@
 **Bookings**: 8 endpoints
 **Messaging**: 4 endpoints
 **Reviews**: 6 endpoints
+**Search**: 3 endpoints
 
-**Total**: 36 endpoints implemented
+**Total**: 39 endpoints implemented
 
 ## Test Coverage
 
-- Total unit tests: 91 passing (Auth: 6, Listings: 16, Availability: 18, Bookings: 22, Messaging: 11, Reviews: 18)
+- Total unit tests: 104 passing (Auth: 6, Listings: 16, Availability: 18, Bookings: 22, Messaging: 11, Reviews: 18, Search: 13)
 - E2E test suites: 3 modules (Auth, Listings, Availability)
 - All critical paths covered
 
