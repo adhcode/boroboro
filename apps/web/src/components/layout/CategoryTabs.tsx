@@ -16,8 +16,9 @@ export function CategoryTabs() {
   const [activeCategory, setActiveCategory] = useState('event-equipment');
 
   return (
-    <div className="px-4 py-3 bg-white border-b border-neutral-200 overflow-x-auto">
-      <div className="flex gap-2">
+    <div className="px-4 py-3 bg-white border-b border-neutral-200">
+      {/* Hide scrollbar but keep scrolling functionality */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
         {categories.map((category) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id;

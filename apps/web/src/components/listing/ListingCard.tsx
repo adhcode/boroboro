@@ -31,14 +31,14 @@ export function ListingCard({
           src={image}
           alt={title}
           width={600}
-          height={600}
+          height={450}
           className="w-full h-full object-cover"
         />
       </CardImage>
       
-      <CardContent>
+      <CardContent className="space-y-2">
         {/* Distance & Verification */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2">
           <span className="text-xs text-neutral-500 flex items-center gap-1">
             <MapPin className="w-3 h-3" />
             {formatDistance(distance)}
@@ -52,12 +52,12 @@ export function ListingCard({
         </div>
         
         {/* Title */}
-        <h3 className="font-semibold text-neutral-900 mb-2 line-clamp-1">
+        <h3 className="font-semibold text-neutral-900 text-base leading-snug">
           {title}
         </h3>
         
         {/* Price & Rating */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-1">
           <div>
             <span className="text-primary-600 font-bold text-lg">
               {formatPrice(pricePerDay)}
@@ -67,7 +67,7 @@ export function ListingCard({
           
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-semibold text-neutral-900">{rating.toFixed(1)}</span>
+            <span className="font-semibold text-neutral-900 text-sm">{rating.toFixed(1)}</span>
           </div>
         </div>
       </CardContent>

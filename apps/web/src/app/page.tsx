@@ -54,15 +54,15 @@ export default function Home() {
       {/* Main Content */}
       <main className="px-4 py-6">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-neutral-900">Popular Nearby</h2>
           <button className="text-primary-600 font-medium text-sm hover:text-primary-700">
             See All
           </button>
         </div>
         
-        {/* Listings Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {/* Listings - Single Column with more spacing */}
+        <div className="space-y-5">
           {popularListings.map((listing) => (
             <ListingCard key={listing.id} {...listing} />
           ))}

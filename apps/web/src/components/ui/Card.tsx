@@ -12,9 +12,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-white rounded-2xl shadow-card overflow-hidden',
+          'bg-white rounded-2xl overflow-hidden',
           {
-            'transition-shadow hover:shadow-card-hover cursor-pointer': hover,
+            'cursor-pointer': hover,
           },
           className
         )}
@@ -33,7 +33,7 @@ const CardImage = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         ref={ref}
-        className={cn('aspect-square w-full overflow-hidden bg-neutral-100', className)}
+        className={cn('aspect-[4/3] w-full overflow-hidden bg-neutral-100', className)}
         {...props}
       >
         {children}
@@ -47,7 +47,7 @@ CardImage.displayName = 'CardImage';
 const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn('p-3', className)} {...props}>
+      <div ref={ref} className={cn('p-4', className)} {...props}>
         {children}
       </div>
     );
