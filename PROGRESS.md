@@ -39,20 +39,26 @@
 - Conversations list view
 - **Tests**: 11/11 unit tests passing
 
+### 6. Reviews
+- Post-booking reviews (one per completed booking)
+- Rating system (1-5 stars) with optional comment
+- User statistics (average rating, distribution)
+- List reviews by user (given/received) and by listing
+- Auto-determine reviewer/reviewee based on booking
+- **Tests**: 18/18 unit tests passing
+
 ## 🔜 Next Modules
 
-### 6. Reviews
-- Post-booking reviews
-- Rating system (1-5)
-
 ### 7. Payments (Paystack Integration)
+- Deposit + booking fee escrow
 - Webhook handling
-- Escrow hold and release
 - Payment status tracking
+- Release after confirmed return
 
 ### 8. Search
 - Advanced search with filters
-- Demand logging
+- Category/location/price filtering
+- Demand logging (search_queries table)
 
 ## API Endpoints Summary
 
@@ -62,13 +68,14 @@
 **Availability**: 6 endpoints
 **Bookings**: 8 endpoints
 **Messaging**: 4 endpoints
+**Reviews**: 6 endpoints
 
-**Total**: 30 endpoints implemented
+**Total**: 36 endpoints implemented
 
 ## Test Coverage
 
-- Total unit tests: 73 passing
-- E2E test suites: 3 modules
+- Total unit tests: 91 passing (Auth: 6, Listings: 16, Availability: 18, Bookings: 22, Messaging: 11, Reviews: 18)
+- E2E test suites: 3 modules (Auth, Listings, Availability)
 - All critical paths covered
 
 ## Git Commits
