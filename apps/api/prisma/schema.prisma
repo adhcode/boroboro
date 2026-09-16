@@ -37,28 +37,45 @@ enum ListingStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  phone         String?
-  role          UserRole  @default(USER)
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  phone             String?
+  role              UserRole  @default(USER)
+  tokenVersion      Int       @default(0) // Increment on logout/password change/compromise
+  emailVerifiedAt   DateTime? // Nullable - set when email is verified
   
-  emailVerified Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  emailVerified     Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  listings      Listing[]
-  bookingsAsRenter Booking[] @relation("RenterBookings")
-  sentMessages  Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  givenReviews  Review[]  @relation("GivenReviews")
-  receivedReviews Review[] @relation("ReceivedReviews")
-  refreshTokens RefreshToken[]
+  listings                Listing[]
+  bookingsAsRenter       Booking[] @relation("RenterBookings")
+  sentMessages           Message[] @relation("SentMessages")
+  receivedMessages       Message[] @relation("ReceivedMessages")
+  givenReviews           Review[]  @relation("GivenReviews")
+  receivedReviews        Review[] @relation("ReceivedReviews")
+  refreshTokens          RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@index([email])
   @@map("users")
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("email_verification_tokens")
 }
 
 model RefreshToken {
