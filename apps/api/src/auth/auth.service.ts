@@ -3,15 +3,18 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -44,9 +48,13 @@ export class AuthService {
         firstName: true,
         lastName: true,
         role: true,
+        emailVerifiedAt: true,
         createdAt: true,
       },
     });
+
+    // Generate and send email verification token
+    await this.generateAndSendVerificationToken(user.id, user.email, user.firstName);
 
     const tokens = await this.generateTokens(user.id, user.email);
 
@@ -102,14 +110,25 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      // Delete old refresh token
+      // Validate tokenVersion matches current user's version
+      if (payload.tokenVersion !== storedToken.user.tokenVersion) {
+        // Token version mismatch - token has been invalidated
+        await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
+        throw new UnauthorizedException('Refresh token has been revoked');
+      }
+
+      // Delete old refresh token (rotation)
       await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
 
-      // Generate new tokens
-      const tokens = await this.generateTokens(payload.sub, payload.email);
+      // Generate new token pair
+      const tokens = await this.generateTokens(payload.sub, storedToken.user.email);
 
       return tokens;
     } catch (error) {
+      // Clean up invalid token
+      await this.prisma.refreshToken.deleteMany({
+        where: { token: refreshToken },
+      });
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -119,28 +138,53 @@ export class AuthService {
       return;
     }
 
-    await this.prisma.refreshToken.deleteMany({
+    // Find the token to get the user ID
+    const storedToken = await this.prisma.refreshToken.findUnique({
       where: { token: refreshToken },
+      select: { userId: true },
     });
+
+    if (storedToken) {
+      // Increment tokenVersion to invalidate ALL refresh tokens for this user
+      await this.prisma.user.update({
+        where: { id: storedToken.userId },
+        data: { tokenVersion: { increment: 1 } },
+      });
+
+      // Delete all refresh tokens for this user
+      await this.prisma.refreshToken.deleteMany({
+        where: { userId: storedToken.userId },
+      });
+    }
   }
 
   private async generateTokens(userId: string, email: string) {
+    // Get user's current tokenVersion
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { tokenVersion: true },
+    });
+
     const payload = { sub: userId, email };
+    const refreshPayload = { 
+      sub: userId, 
+      tokenVersion: user?.tokenVersion || 0,
+    };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: '15m',
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(refreshPayload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '7d',
+        expiresIn: '30d', // Changed from 7d to 30d
       }),
     ]);
 
     // Store refresh token in database
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 30); // Changed from 7 to 30
 
     await this.prisma.refreshToken.create({
       data: {
@@ -162,5 +206,96 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
     return user;
+  }
+
+  async verifyEmail(token: string) {
+    // Hash the incoming token to match against stored hash
+    const tokenHash = this.hashToken(token);
+
+    const verificationToken = await this.prisma.emailVerificationToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!verificationToken) {
+      throw new BadRequestException('Invalid verification token');
+    }
+
+    if (verificationToken.expiresAt < new Date()) {
+      // Delete expired token
+      await this.prisma.emailVerificationToken.delete({
+        where: { id: verificationToken.id },
+      });
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    // Update user's email verification status
+    await this.prisma.user.update({
+      where: { id: verificationToken.userId },
+      data: { emailVerifiedAt: new Date() },
+    });
+
+    // Delete used token
+    await this.prisma.emailVerificationToken.delete({
+      where: { id: verificationToken.id },
+    });
+
+    return { message: 'Email verified successfully' };
+  }
+
+  async resendVerificationEmail(email: string) {
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Always return success to avoid email enumeration
+    // But only send email if user exists and isn't verified
+    const user = await this.usersService.findByEmail(normalizedEmail);
+    
+    if (user && !user.emailVerifiedAt) {
+      // Invalidate existing unexpired tokens
+      await this.prisma.emailVerificationToken.deleteMany({
+        where: {
+          userId: user.id,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      // Generate and send new token
+      await this.generateAndSendVerificationToken(user.id, user.email, user.firstName);
+    }
+
+    // Always return success message
+    return { message: 'If your email is registered and unverified, a verification email has been sent' };
+  }
+
+  private async generateAndSendVerificationToken(
+    userId: string,
+    email: string,
+    firstName: string,
+  ): Promise<void> {
+    // Generate cryptographically random token
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    // Hash token before storing (SHA-256)
+    const tokenHash = this.hashToken(token);
+    
+    // Store token with 24-hour expiry
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    await this.prisma.emailVerificationToken.create({
+      data: {
+        userId,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // Send email with raw token (never log or store the raw token)
+    await this.emailService.sendVerificationEmail(email, token, firstName);
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
 }
