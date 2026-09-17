@@ -18,6 +18,7 @@ import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { QueryListingsDto } from './dto/query-listings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
@@ -26,7 +27,7 @@ export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard) // Require email verification
   create(@CurrentUser() user: User, @Body() createListingDto: CreateListingDto) {
     return this.listingsService.create(user.id, createListingDto);
   }

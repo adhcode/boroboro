@@ -16,6 +16,7 @@ import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
@@ -25,6 +26,7 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
+  @UseGuards(EmailVerifiedGuard) // Require email verification for creating bookings
   create(@CurrentUser() user: User, @Body() createBookingDto: CreateBookingDto) {
     return this.bookingsService.create(user.id, createBookingDto);
   }
