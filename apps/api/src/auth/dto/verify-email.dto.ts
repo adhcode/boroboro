@@ -1,7 +1,8 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsString, Length, Matches } from 'class-validator';
 
 export class VerifyEmailDto {
   @IsString()
-  @MinLength(64) // SHA-256 hex string is 64 characters
-  token: string;
+  @Length(6, 6, { message: 'Verification code must be 6 digits' })
+  @Matches(/^\d{6}$/, { message: 'Verification code must be 6 digits' })
+  code: string;
 }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { configValidationSchema } from './config/config.validation';
 import { PrismaModule } from './prisma/prisma.module';
@@ -23,6 +24,11 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
         abortEarly: true,
       },
     }),
+    // Rate limiting - 10 requests per minute per IP
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // Time window in milliseconds (1 minute)
+      limit: 10, // Max requests per window
+    }]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -37,6 +43,10 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

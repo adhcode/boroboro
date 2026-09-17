@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Phone, Send } from 'lucide-react';
 
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -73,7 +74,8 @@ export default function ChatPage({ params: _params }: { params: { id: string } }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-32">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-white flex flex-col pb-32">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3">
         <div className="flex items-center justify-between">
@@ -207,5 +209,6 @@ export default function ChatPage({ params: _params }: { params: { id: string } }
 
       <BottomNav />
     </div>
+    </ProtectedRoute>
   );
 }

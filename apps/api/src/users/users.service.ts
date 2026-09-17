@@ -16,6 +16,8 @@ export class UsersService {
         phone: true,
         role: true,
         emailVerified: true,
+        emailVerifiedAt: true,
+        tokenVersion: true,
         createdAt: true,
         updatedAt: true,
       },

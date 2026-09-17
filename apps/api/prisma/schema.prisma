@@ -59,6 +59,7 @@ model User {
   receivedReviews        Review[] @relation("ReceivedReviews")
   refreshTokens          RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens    PasswordResetToken[]
 
   @@index([email])
   @@map("users")
@@ -76,6 +77,20 @@ model EmailVerificationToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
 }
 
 model RefreshToken {

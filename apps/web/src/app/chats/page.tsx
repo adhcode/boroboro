@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -63,7 +64,8 @@ export default function ChatsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-white pb-32">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-4">
         <h1 className="text-[18px] font-bold text-neutral-900">Chats</h1>
@@ -162,5 +164,6 @@ export default function ChatsPage() {
 
       <BottomNav />
     </div>
+    </ProtectedRoute>
   );
 }

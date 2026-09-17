@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Camera, MapPin, ChevronDown } from 'lucide-react';
 
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -48,7 +49,8 @@ export default function ListItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-56">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-neutral-50 pb-56">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -206,5 +208,6 @@ export default function ListItemPage() {
 
       <BottomNav />
     </div>
+    </ProtectedRoute>
   );
 }

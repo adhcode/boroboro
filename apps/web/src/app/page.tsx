@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { CategoryTabs } from '@/components/layout/CategoryTabs';
 import { Header } from '@/components/layout/Header';
+import { Hero } from '@/components/layout/Hero';
 import { SearchBar } from '@/components/layout/SearchBar';
 import { ListingCard } from '@/components/listing/ListingCard';
 
@@ -81,38 +82,58 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      <Header />
-      <SearchBar />
-      <CategoryTabs onCategoryChange={handleCategoryChange} />
+    <div className="min-h-screen bg-white">
+      {/* Mobile Header - Hidden when hero is visible */}
+      <div className="lg:hidden hidden">
+        <Header />
+        <SearchBar />
+      </div>
       
-      {/* Main Content - Consistent spacing throughout */}
-      <main className="px-4 pt-4 pb-6">
-        {/* Section Header - Consistent vertical spacing */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[17px] font-bold text-neutral-900">
-            {selectedCategory === 'all' ? 'Popular Nearby' : 'Available'}
-          </h2>
-          <button className="text-primary-600 font-medium text-[13px] hover:text-primary-700">
-            See All
-          </button>
+      {/* Hero - Visible on all screens */}
+      <Hero />
+      
+      {/* Categories */}
+      <div className="bg-white border-b border-neutral-200 lg:border-t">
+        <div className="lg:max-w-7xl lg:mx-auto px-4 lg:px-8 py-3 lg:py-4">
+          <h3 className="hidden lg:block text-[13px] font-semibold text-neutral-500 uppercase tracking-wide mb-3">
+            Featured Categories
+          </h3>
+          <CategoryTabs onCategoryChange={handleCategoryChange} />
         </div>
-        
-        {/* Listings - Consistent spacing between cards */}
-        {filteredListings.length > 0 ? (
-          <div className="space-y-3">
-            {filteredListings.map((listing) => (
-              <ListingCard key={listing.id} {...listing} />
-            ))}
+      </div>
+      
+      {/* Main Content - Responsive */}
+      <main className="px-4 lg:px-8 pt-4 pb-28 lg:pb-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header - Responsive */}
+          <div className="flex items-center justify-between mb-3 lg:mb-6">
+            <h2 className="text-[17px] lg:text-[28px] font-bold text-neutral-900">
+              {selectedCategory === 'all' ? 'Popular Rentals Nearby' : 'Available Items'}
+            </h2>
+            <button className="text-primary-600 font-medium text-[13px] lg:text-[15px] hover:text-primary-700">
+              See All
+            </button>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-neutral-400 text-[13px]">No items found in this category</p>
-          </div>
-        )}
+          
+          {/* Listings - Responsive Grid */}
+          {filteredListings.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-6">
+              {filteredListings.map((listing) => (
+                <ListingCard key={listing.id} {...listing} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 lg:py-20">
+              <p className="text-neutral-400 text-[13px] lg:text-[15px]">No items found in this category</p>
+            </div>
+          )}
+        </div>
       </main>
       
-      <BottomNav />
+      {/* Bottom Nav - Only on mobile */}
+      <div className="lg:hidden">
+        <BottomNav />
+      </div>
     </div>
   );
 }

@@ -208,9 +208,9 @@ export class AuthService {
     return user;
   }
 
-  async verifyEmail(token: string) {
-    // Hash the incoming token to match against stored hash
-    const tokenHash = this.hashToken(token);
+  async verifyEmail(code: string) {
+    // Hash the incoming code to match against stored hash
+    const tokenHash = this.hashToken(code);
 
     const verificationToken = await this.prisma.emailVerificationToken.findUnique({
       where: { tokenHash },
@@ -218,7 +218,7 @@ export class AuthService {
     });
 
     if (!verificationToken) {
-      throw new BadRequestException('Invalid verification token');
+      throw new BadRequestException('Invalid verification code');
     }
 
     if (verificationToken.expiresAt < new Date()) {
@@ -226,11 +226,11 @@ export class AuthService {
       await this.prisma.emailVerificationToken.delete({
         where: { id: verificationToken.id },
       });
-      throw new BadRequestException('Verification token has expired');
+      throw new BadRequestException('Verification code has expired');
     }
 
     // Update user's email verification status
-    await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: verificationToken.userId },
       data: { emailVerifiedAt: new Date() },
     });
@@ -240,7 +240,40 @@ export class AuthService {
       where: { id: verificationToken.id },
     });
 
-    return { message: 'Email verified successfully' };
+    // Generate tokens for auto-login
+    const accessToken = this.jwtService.sign(
+      { sub: updatedUser.id, email: updatedUser.email },
+      { 
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+        expiresIn: '15m',
+      },
+    );
+
+    const refreshToken = this.jwtService.sign(
+      { sub: updatedUser.id, tokenVersion: updatedUser.tokenVersion },
+      { 
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        expiresIn: '30d',
+      },
+    );
+
+    // Return tokens and user for auto-login
+    return {
+      message: 'Email verified successfully',
+      accessToken,
+      refreshToken,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+        emailVerifiedAt: updatedUser.emailVerifiedAt,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+      },
+    };
   }
 
   async resendVerificationEmail(email: string) {
@@ -268,16 +301,108 @@ export class AuthService {
     return { message: 'If your email is registered and unverified, a verification email has been sent' };
   }
 
+  async forgotPassword(email: string) {
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Always return success to avoid email enumeration
+    const user = await this.usersService.findByEmail(normalizedEmail);
+    
+    if (user) {
+      // Invalidate existing unexpired tokens
+      await this.prisma.passwordResetToken.deleteMany({
+        where: {
+          userId: user.id,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      // Generate and send reset code
+      await this.generateAndSendPasswordResetCode(user.id, user.email, user.firstName);
+    }
+
+    // Always return success message
+    return { message: 'If your email is registered, a password reset code has been sent' };
+  }
+
+  async resetPassword(code: string, newPassword: string) {
+    // Hash the incoming code to match against stored hash
+    const tokenHash = this.hashToken(code);
+
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!resetToken) {
+      throw new BadRequestException('Invalid reset code');
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      // Delete expired token
+      await this.prisma.passwordResetToken.delete({
+        where: { id: resetToken.id },
+      });
+      throw new BadRequestException('Reset code has expired');
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password and increment tokenVersion (invalidates all refresh tokens)
+    await this.prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { 
+        passwordHash,
+        tokenVersion: { increment: 1 },
+      },
+    });
+
+    // Delete used token
+    await this.prisma.passwordResetToken.delete({
+      where: { id: resetToken.id },
+    });
+
+    return { message: 'Password reset successful' };
+  }
+
+  private async generateAndSendPasswordResetCode(
+    userId: string,
+    email: string,
+    firstName: string,
+  ): Promise<void> {
+    // Generate cryptographically secure 6-digit code
+    const code = this.generateVerificationCode();
+    
+    // Hash code before storing (SHA-256)
+    const tokenHash = this.hashToken(code);
+    
+    // Store token with 1-hour expiry (shorter than email verification)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // Send email with raw code
+    await this.emailService.sendPasswordResetEmail(email, code, firstName);
+  }
+
   private async generateAndSendVerificationToken(
     userId: string,
     email: string,
     firstName: string,
   ): Promise<void> {
-    // Generate cryptographically random token
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically secure 6-digit code
+    const code = this.generateVerificationCode();
     
-    // Hash token before storing (SHA-256)
-    const tokenHash = this.hashToken(token);
+    // Hash code before storing (SHA-256)
+    const tokenHash = this.hashToken(code);
     
     // Store token with 24-hour expiry
     const expiresAt = new Date();
@@ -291,8 +416,15 @@ export class AuthService {
       },
     });
 
-    // Send email with raw token (never log or store the raw token)
-    await this.emailService.sendVerificationEmail(email, token, firstName);
+    // Send email with raw code (never log or store the raw code)
+    await this.emailService.sendVerificationEmail(email, code, firstName);
+  }
+
+  private generateVerificationCode(): string {
+    // Generate a cryptographically secure 6-digit code
+    // Use crypto.randomInt to ensure uniform distribution
+    const code = crypto.randomInt(100000, 999999).toString();
+    return code;
   }
 
   private hashToken(token: string): string {
