@@ -70,6 +70,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    //Check if password hash is null (Google-only user)
+    if (!user.passwordHash) {
+      throw new UnauthorizedException(
+        'This account uses Google Sign-In. Please continue with Google.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -80,6 +87,71 @@ export class AuthService {
     // Remove password hash from response
     const { passwordHash, ...userWithoutPassword } = user;
 
+    return {
+      user: userWithoutPassword,
+      ...tokens,
+    };
+  }
+
+  async loginOrRegisterWithGoogle(googleProfile: any) {
+    const { googleId, email, emailVerified, firstName, lastName, picture } = googleProfile;
+
+    // Case 1: User exists with this googleId (returning Google user)
+    let user = await this.prisma.user.findUnique({
+      where: { googleId },
+    });
+
+    if (user) {
+      // Returning Google user - just log them in
+      const tokens = await this.generateTokens(user.id, user.email);
+      const { passwordHash, ...userWithoutPassword } = user;
+      return {
+        user: userWithoutPassword,
+        ...tokens,
+      };
+    }
+
+    // Case 2: User exists with this email (link Google account)
+    user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (user) {
+      // Link Google account to existing user
+      const updatedUser = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId,
+          // Set emailVerifiedAt if not already set (Google confirms email)
+          emailVerifiedAt: user.emailVerifiedAt || (emailVerified ? new Date() : null),
+        },
+      });
+
+      const tokens = await this.generateTokens(updatedUser.id, updatedUser.email);
+      const { passwordHash, ...userWithoutPassword } = updatedUser;
+      return {
+        user: userWithoutPassword,
+        ...tokens,
+      };
+    }
+
+    // Case 3: Brand new user - create account
+    const newUser = await this.prisma.user.create({
+      data: {
+        googleId,
+        email,
+        firstName,
+        lastName,
+        // Google users don't have a password
+        passwordHash: null,
+        // Email is already verified by Google
+        emailVerifiedAt: emailVerified ? new Date() : null,
+      },
+    });
+
+    const tokens = await this.generateTokens(newUser.id, newUser.email);
+    const { passwordHash, ...userWithoutPassword } = newUser;
+    
     return {
       user: userWithoutPassword,
       ...tokens,
